@@ -11,7 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.lang.NonNull;
 import org.springframework.data.domain.Sort;
 
 import com.helphub.backend.common.enums.UserRole;
@@ -25,6 +24,7 @@ import com.helphub.backend.modules.user.dto.response.UserSummaryResponse;
 import com.helphub.backend.security.model.CustomUserDetails;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -59,8 +59,8 @@ public class UserController {
         }
 
         @GetMapping("/{id}")
-        public ApiResponse<UserDetailResponse> getUserById(@PathVariable @NonNull UUID id) {
-                UserDetailResponse response = userService.getUserById(id);
+        public ApiResponse<UserDetailResponse> getUserById(@PathVariable @NotNull UUID id) {
+                UserDetailResponse response = userService.getUserById(Objects.requireNonNull(id));
                 return ApiResponse.<UserDetailResponse>builder()
                                 .success(true)
                                 .message("Get user detail successfully")
@@ -68,8 +68,8 @@ public class UserController {
                                 .build();
         }
 
-        @GetMapping
         @PreAuthorize("hasRole('ADMIN')")
+        @GetMapping
         public ApiResponse<Page<UserSummaryResponse>> getUsers(
                         @RequestParam(required = false) String keyword,
                         @RequestParam(required = false) UserRole role,
@@ -94,14 +94,15 @@ public class UserController {
                                 .build();
         }
 
-        @PatchMapping("/{id}/role")
         @PreAuthorize("hasRole('ADMIN')")
+        @PatchMapping("/{id}/role")
         @ResponseStatus(HttpStatus.OK)
         public ApiResponse<UserDetailResponse> updateUserRole(
-                        @PathVariable @NonNull UUID id,
+                        @PathVariable @NotNull UUID id,
                         @Valid @RequestBody UpdateUserRoleRequest request,
                         @AuthenticationPrincipal CustomUserDetails currentUser) {
-                UserDetailResponse response = userService.updateUserRole(id, request, currentUser.getUserId());
+                UserDetailResponse response = userService.updateUserRole(Objects.requireNonNull(id), request,
+                                currentUser.getUserId());
                 return ApiResponse.<UserDetailResponse>builder()
                                 .success(true)
                                 .message("Update user role successfully")
@@ -109,14 +110,15 @@ public class UserController {
                                 .build();
         }
 
-        @PatchMapping("/{id}/status")
         @PreAuthorize("hasRole('ADMIN')")
+        @PatchMapping("/{id}/status")
         @ResponseStatus(HttpStatus.OK)
         public ApiResponse<UserDetailResponse> updateUserStatus(
-                        @PathVariable @NonNull UUID id,
+                        @PathVariable @NotNull UUID id,
                         @Valid @RequestBody UpdateUserStatusRequest request,
                         @AuthenticationPrincipal CustomUserDetails currentUser) {
-                UserDetailResponse response = userService.updateUserStatus(id, request, currentUser.getUserId());
+                UserDetailResponse response = userService.updateUserStatus(Objects.requireNonNull(id), request,
+                                currentUser.getUserId());
                 return ApiResponse.<UserDetailResponse>builder()
                                 .success(true)
                                 .message("Update user status successfully")
