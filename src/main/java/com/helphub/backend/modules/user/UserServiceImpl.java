@@ -11,6 +11,7 @@ import org.springframework.lang.NonNull;
 
 import com.helphub.backend.common.enums.UserRole;
 import com.helphub.backend.common.exception.BadRequestException;
+import com.helphub.backend.common.exception.ForbiddenException;
 import com.helphub.backend.common.exception.ResourceNotFoundException;
 import com.helphub.backend.modules.user.dto.request.UpdateProfileRequest;
 import com.helphub.backend.modules.user.dto.request.UpdateUserRoleRequest;
@@ -108,6 +109,10 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Admin cannot change their own role");
         }
 
+        if (targetUser.getRole() == request.getRole()) {
+            throw new BadRequestException("User already has this role");
+        }
+
         targetUser.setRole(request.getRole());
 
         User savedUser = userRepository.save(targetUser);
@@ -126,6 +131,10 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Admin cannot deactivate their own account");
         }
 
+        if (targetUser.getIsActive().equals(request.getIsActive())) {
+            throw new BadRequestException("User status is already set to the requested value");
+        }
+
         targetUser.setIsActive(request.getIsActive());
 
         User savedUser = userRepository.save(targetUser);
@@ -139,7 +148,7 @@ public class UserServiceImpl implements UserService {
 
     private void validateAdminAction(User admin) {
         if (admin.getRole() != UserRole.ADMIN) {
-            throw new BadRequestException("Only admin can perform this action");
+            throw new ForbiddenException("Only admin can perform this action");
         }
     }
 
