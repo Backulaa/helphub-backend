@@ -6,6 +6,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.helphub.backend.common.payload.ApiResponse;
 
@@ -70,6 +71,16 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.builder()
                                                 .success(false)
                                                 .message(ex.getMessage())
+                                                .data(null)
+                                                .build());
+        }
+
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(ApiResponse.builder()
+                                                .success(false)
+                                                .message("You do not have permission to perform this action")
                                                 .data(null)
                                                 .build());
         }
