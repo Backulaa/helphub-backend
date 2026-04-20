@@ -19,73 +19,73 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @Validated
 public class CategoryController {
 
-    private final CategoryService categoryService;
+        private final CategoryService categoryService;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<ApiResponse<CategoryDetailResponse>> createCategory(
-            @Valid @RequestBody CreateCategoryRequest request) {
-        CategoryDetailResponse response = categoryService.createCategory(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.<CategoryDetailResponse>builder()
-                        .success(true)
-                        .message("Category created successfully")
-                        .data(response)
-                        .build());
-    }
+        @PreAuthorize("hasRole('ADMIN')")
+        @PostMapping
+        public ResponseEntity<ApiResponse<CategoryDetailResponse>> createCategory(
+                        @Valid @RequestBody CreateCategoryRequest request) {
+                CategoryDetailResponse response = categoryService.createCategory(request);
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(ApiResponse.<CategoryDetailResponse>builder()
+                                                .success(true)
+                                                .message("Category created successfully")
+                                                .data(response)
+                                                .build());
+        }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<CategorySummaryResponse>>> getCategories(
-            @RequestParam(defaultValue = "true") boolean activeOnly) {
-        List<CategorySummaryResponse> response = activeOnly
-                ? categoryService.getActiveCategories()
-                : categoryService.getAllCategories();
+        @GetMapping
+        public ResponseEntity<ApiResponse<List<CategorySummaryResponse>>> getCategories(
+                        @RequestParam(defaultValue = "true") boolean activeOnly) {
+                List<CategorySummaryResponse> response = activeOnly
+                                ? categoryService.getActiveCategories()
+                                : categoryService.getAllCategories();
 
-        return ResponseEntity.ok(ApiResponse.<List<CategorySummaryResponse>>builder()
-                .success(true)
-                .message("Categories fetched successfully")
-                .data(response)
-                .build());
-    }
+                return ResponseEntity.ok(ApiResponse.<List<CategorySummaryResponse>>builder()
+                                .success(true)
+                                .message("Categories fetched successfully")
+                                .data(response)
+                                .build());
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CategoryDetailResponse>> getCategoryById(@PathVariable @NotNull UUID id) {
-        CategoryDetailResponse response = categoryService.getCategoryById(id);
-        return ResponseEntity.ok(ApiResponse.<CategoryDetailResponse>builder()
-                .success(true)
-                .message("Category fetched successfully")
-                .data(response)
-                .build());
-    }
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<CategoryDetailResponse>> getCategoryById(@PathVariable @NotNull UUID id) {
+                CategoryDetailResponse response = categoryService.getCategoryById(id);
+                return ResponseEntity.ok(ApiResponse.<CategoryDetailResponse>builder()
+                                .success(true)
+                                .message("Category fetched successfully")
+                                .data(response)
+                                .build());
+        }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<CategoryDetailResponse>> updateCategory(
-            @PathVariable @NotNull UUID id,
-            @Valid @RequestBody UpdateCategoryRequest request) {
-        CategoryDetailResponse response = categoryService.updateCategory(id, request);
-        return ResponseEntity.ok(ApiResponse.<CategoryDetailResponse>builder()
-                .success(true)
-                .message("Category updated successfully")
-                .data(response)
-                .build());
-    }
+        @PreAuthorize("hasRole('ADMIN')")
+        @PutMapping("/{id}")
+        public ResponseEntity<ApiResponse<CategoryDetailResponse>> updateCategory(
+                        @PathVariable @NotNull UUID id,
+                        @Valid @RequestBody UpdateCategoryRequest request) {
+                CategoryDetailResponse response = categoryService.updateCategory(id, request);
+                return ResponseEntity.ok(ApiResponse.<CategoryDetailResponse>builder()
+                                .success(true)
+                                .message("Category updated successfully")
+                                .data(response)
+                                .build());
+        }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<CategoryDetailResponse>> updateCategoryStatus(
-            @PathVariable @NotNull UUID id,
-            @Valid @RequestBody UpdateCategoryStatusRequest request) {
-        CategoryDetailResponse response = categoryService.updateCategoryStatus(id, request);
-        return ResponseEntity.ok(ApiResponse.<CategoryDetailResponse>builder()
-                .success(true)
-                .message("Category status updated successfully")
-                .data(response)
-                .build());
-    }
+        @PreAuthorize("hasRole('ADMIN')")
+        @PatchMapping("/{id}/status")
+        public ResponseEntity<ApiResponse<CategoryDetailResponse>> updateCategoryStatus(
+                        @PathVariable @NotNull UUID id,
+                        @Valid @RequestBody UpdateCategoryStatusRequest request) {
+                CategoryDetailResponse response = categoryService.updateCategoryStatus(id, request);
+                return ResponseEntity.ok(ApiResponse.<CategoryDetailResponse>builder()
+                                .success(true)
+                                .message("Category status updated successfully")
+                                .data(response)
+                                .build());
+        }
 }
