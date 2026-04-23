@@ -8,8 +8,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.access.AccessDeniedException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.helphub.backend.common.payload.ApiResponse;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -99,6 +102,7 @@ public class GlobalExceptionHandler {
         // 500 - fallback
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
+                log.error("Unexpected error occurred", ex);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(ApiResponse.builder()
                                                 .success(false)
