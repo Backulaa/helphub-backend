@@ -7,7 +7,6 @@ import com.helphub.backend.common.enums.UserRole;
 import com.helphub.backend.common.exception.BadRequestException;
 import com.helphub.backend.common.exception.ForbiddenException;
 import com.helphub.backend.common.exception.ResourceNotFoundException;
-import com.helphub.backend.modules.postreaction.dto.PostReactionMapper;
 import com.helphub.backend.modules.postreaction.dto.request.CreatePostReactionRequest;
 import com.helphub.backend.modules.postreaction.dto.request.UpdatePostReactionRequest;
 import com.helphub.backend.modules.postreaction.dto.response.PostReactionCountResponse;
