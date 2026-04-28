@@ -3,15 +3,15 @@ spring:
     name: helphub-backend
 
   datasource:
-      url: jdbc:postgresql://localhost:5432/helphub_db
-      username: ${SPRING_DATASOURCE_USERNAME:postgres}
-      password: ${SPRING_DATASOURCE_PASSWORD:123456}
+      url: ${SPRING_DATASOURCE_URL}
+      username: ${SPRING_DATASOURCE_USERNAME}
+      password: ${SPRING_DATASOURCE_PASSWORD}
       driver-class-name: org.postgresql.Driver
     
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -34,4 +34,4 @@ springdoc:
     path: /swagger-ui.html
 
 server:
-  port: 8081
+  port: ${PORT:8081}
