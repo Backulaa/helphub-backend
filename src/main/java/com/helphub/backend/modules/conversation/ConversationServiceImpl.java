@@ -11,9 +11,11 @@ import com.helphub.backend.modules.conversation.dto.response.ConversationDetailR
 import com.helphub.backend.modules.conversation.dto.response.ConversationSummaryResponse;
 import com.helphub.backend.persistence.entity.Conversation;
 import com.helphub.backend.persistence.entity.ConversationMember;
+import com.helphub.backend.persistence.entity.Message;
 import com.helphub.backend.persistence.entity.User;
 import com.helphub.backend.persistence.repository.ConversationMemberRepository;
 import com.helphub.backend.persistence.repository.ConversationRepository;
+import com.helphub.backend.persistence.repository.MessageRepository;
 import com.helphub.backend.persistence.repository.UserRepository;
 import com.helphub.backend.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -32,6 +35,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final ConversationMemberRepository conversationMemberRepository;
     private final UserRepository userRepository;
     private final ConversationMapper conversationMapper;
+    private final MessageRepository messageRepository;
 
     @Override
     @Transactional
@@ -100,7 +104,51 @@ public class ConversationServiceImpl implements ConversationService {
 
         return conversationRepository.findAllByMemberId(currentUser.getId())
                 .stream()
-                .map(conversationMapper::toSummaryResponse)
+                .map(conversation -> {
+
+                    ConversationSummaryResponse response = conversationMapper.toSummaryResponse(conversation);
+
+                    Optional<Message> lastMessageOpt = messageRepository
+                            .findTopByConversationIdOrderByCreatedAtDesc(conversation.getId());
+
+                    UUID lastMessageId = null;
+                    LocalDateTime lastMessageTime = null;
+
+                    if (lastMessageOpt.isPresent()) {
+                        Message lastMessage = lastMessageOpt.get();
+                        lastMessageId = lastMessage.getId();
+                        lastMessageTime = lastMessage.getCreatedAt();
+                    }
+
+                    response.setLastMessageId(lastMessageId);
+
+                    ConversationMember member = conversationMemberRepository
+                            .findByConversationIdAndUserId(conversation.getId(), currentUser.getId())
+                            .orElse(null);
+
+                    LocalDateTime lastReadAt = null;
+
+                    if (member != null && member.getLastReadMessage() != null) {
+                        lastReadAt = member.getLastReadMessage().getCreatedAt();
+                    }
+
+                    long unreadCount;
+
+                    if (lastReadAt == null) {
+                        unreadCount = messageRepository.countByConversationIdAndSenderIdNot(
+                                conversation.getId(),
+                                currentUser.getId());
+                    } else {
+                        unreadCount = messageRepository.countByConversationIdAndSenderIdNotAndCreatedAtAfter(
+                                conversation.getId(),
+                                currentUser.getId(),
+                                lastReadAt);
+                    }
+
+                    response.setUnreadCount((int) unreadCount);
+
+                    return response;
+                })
                 .toList();
     }
 
@@ -110,9 +158,38 @@ public class ConversationServiceImpl implements ConversationService {
         User currentUser = getCurrentUser();
         Conversation conversation = findConversationById(conversationId);
 
-        validateMember(conversation.getId(), currentUser.getId());
+        ConversationMember member = conversationMemberRepository
+                .findByConversationIdAndUserId(conversation.getId(), currentUser.getId())
+                .orElseThrow(() -> new ForbiddenException("You are not a member of this conversation"));
 
-        return conversationMapper.toDetailResponse(conversation);
+        ConversationDetailResponse response = conversationMapper.toDetailResponse(conversation);
+
+        UUID lastReadMessageId = null;
+        LocalDateTime lastReadAt = null;
+
+        if (member.getLastReadMessage() != null) {
+            lastReadMessageId = member.getLastReadMessage().getId();
+            lastReadAt = member.getLastReadMessage().getCreatedAt();
+        }
+
+        response.setMyLastReadMessageId(lastReadMessageId);
+
+        long unreadCount;
+
+        if (lastReadAt == null) {
+            unreadCount = messageRepository.countByConversationIdAndSenderIdNot(
+                    conversation.getId(),
+                    currentUser.getId());
+        } else {
+            unreadCount = messageRepository.countByConversationIdAndSenderIdNotAndCreatedAtAfter(
+                    conversation.getId(),
+                    currentUser.getId(),
+                    lastReadAt);
+        }
+
+        response.setUnreadCount((int) unreadCount);
+
+        return response;
     }
 
     @Override

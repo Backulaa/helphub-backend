@@ -17,6 +17,8 @@ public class ConversationDetailResponse {
     private ConversationType type;
     private UUID createdBy;
     private List<ConversationMemberResponse> members;
+    private UUID myLastReadMessageId;
+    private Integer unreadCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
