@@ -7,6 +7,7 @@ import com.helphub.backend.common.util.DateTimeUtils;
 import com.helphub.backend.modules.message.dto.request.SendMessageRequest;
 import com.helphub.backend.modules.message.dto.request.UpdateMessageRequest;
 import com.helphub.backend.modules.message.dto.response.MessageResponse;
+import com.helphub.backend.modules.notification.NotificationService;
 import com.helphub.backend.persistence.entity.*;
 import com.helphub.backend.persistence.repository.*;
 import com.helphub.backend.security.model.CustomUserDetails;
@@ -29,6 +30,7 @@ public class MessageServiceImpl implements MessageService {
     private final MediaRepository mediaRepository;
     private final MessageMediaRepository messageMediaRepository;
     private final MessageMapper messageMapper;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -58,6 +60,8 @@ public class MessageServiceImpl implements MessageService {
 
         conversation.setUpdatedAt(DateTimeUtils.now());
         conversationRepository.save(conversation);
+
+        notifyOtherMembers(conversation, currentUser, message);
 
         return messageMapper.toResponse(message, messageMediaList);
     }
@@ -209,6 +213,25 @@ public class MessageServiceImpl implements MessageService {
 
         if (!hasContent && !hasMedia) {
             throw new BadRequestException("Message must contain text or media");
+        }
+    }
+
+    private void notifyOtherMembers(Conversation conversation, User sender, Message message) {
+        List<ConversationMember> members = conversationMemberRepository.findAllByConversationId(conversation.getId());
+
+        for (ConversationMember member : members) {
+            User receiver = member.getUser();
+
+            if (receiver.getId().equals(sender.getId())) {
+                continue;
+            }
+
+            notificationService.createNotification(
+                    receiver.getId(),
+                    message.getContent(),
+                    "MESSAGE",
+                    message.getId(),
+                    "/conversations/" + conversation.getId());
         }
     }
 }
