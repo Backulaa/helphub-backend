@@ -4,6 +4,7 @@ import com.helphub.backend.common.exception.ForbiddenException;
 import com.helphub.backend.common.exception.ResourceNotFoundException;
 import com.helphub.backend.common.util.DateTimeUtils;
 import com.helphub.backend.modules.notification.dto.response.NotificationResponse;
+import com.helphub.backend.modules.notification.dto.response.RealtimeNotificationResponse;
 import com.helphub.backend.modules.notification.dto.response.UnreadNotificationCountResponse;
 import com.helphub.backend.persistence.entity.Notification;
 import com.helphub.backend.persistence.entity.User;
@@ -11,6 +12,8 @@ import com.helphub.backend.persistence.repository.NotificationRepository;
 import com.helphub.backend.persistence.repository.UserRepository;
 import com.helphub.backend.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,9 +30,11 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final NotificationMapper notificationMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public NotificationResponse createNotification(
             UUID userId,
             String content,
@@ -49,7 +54,21 @@ public class NotificationServiceImpl implements NotificationService {
 
         notificationRepository.save(Objects.requireNonNull(notification));
 
-        return notificationMapper.toResponse(notification);
+        NotificationResponse response = notificationMapper.toResponse(notification);
+
+        long unreadCount = notificationRepository.countByUserIdAndIsReadFalse(user.getId());
+
+        RealtimeNotificationResponse payload = RealtimeNotificationResponse.builder()
+                .eventType("NOTIFICATION_CREATED")
+                .notification(response)
+                .unreadCount(unreadCount)
+                .build();
+
+        messagingTemplate.convertAndSendToUser(
+                user.getId().toString(),
+                "/queue/notifications",
+                payload);
+        return response;
     }
 
     @Override
