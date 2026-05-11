@@ -7,11 +7,14 @@ import com.helphub.backend.common.util.DateTimeUtils;
 import com.helphub.backend.modules.message.dto.request.SendMessageRequest;
 import com.helphub.backend.modules.message.dto.request.UpdateMessageRequest;
 import com.helphub.backend.modules.message.dto.response.MessageResponse;
+import com.helphub.backend.modules.message.dto.response.RealtimeMessageResponse;
 import com.helphub.backend.modules.notification.NotificationService;
 import com.helphub.backend.persistence.entity.*;
 import com.helphub.backend.persistence.repository.*;
 import com.helphub.backend.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageMediaRepository messageMediaRepository;
     private final MessageMapper messageMapper;
     private final NotificationService notificationService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -63,7 +67,11 @@ public class MessageServiceImpl implements MessageService {
 
         notifyOtherMembers(conversation, currentUser, message);
 
-        return messageMapper.toResponse(message, messageMediaList);
+        MessageResponse response = messageMapper.toResponse(message, messageMediaList);
+
+        broadcastMessageToConversationMembers(conversation, response);
+
+        return response;
     }
 
     @Override
@@ -232,6 +240,30 @@ public class MessageServiceImpl implements MessageService {
                     "MESSAGE",
                     message.getId(),
                     "/conversations/" + conversation.getId());
+        }
+    }
+
+    @SuppressWarnings("null")
+    private void broadcastMessageToConversationMembers(Conversation conversation, MessageResponse messageResponse) {
+        List<ConversationMember> members = conversationMemberRepository.findAllByConversationId(conversation.getId());
+
+        RealtimeMessageResponse payload = RealtimeMessageResponse.builder()
+                .eventType("MESSAGE_CREATED")
+                .message(messageResponse)
+                .build();
+
+        Object messagePayload = Objects.requireNonNull(payload);
+
+        for (ConversationMember member : members) {
+
+            UUID memberId = Objects.requireNonNull(member.getUser().getId());
+
+            String userId = memberId.toString();
+
+            messagingTemplate.convertAndSendToUser(
+                    userId,
+                    "/queue/messages",
+                    messagePayload);
         }
     }
 }
