@@ -245,6 +245,38 @@ public class ConversationServiceImpl implements ConversationService {
                 .findFirst();
     }
 
+    @Override
+    @Transactional
+    public Conversation createOrGetPrivateConversation(UUID firstUserId, UUID secondUserId, UUID createdById) {
+        User firstUser = findActiveUserById(firstUserId);
+        User secondUser = findActiveUserById(secondUserId);
+        User createdBy = findActiveUserById(createdById);
+
+        if (firstUser.getId().equals(secondUser.getId())) {
+            throw new BadRequestException("Cannot create private conversation with yourself");
+        }
+
+        Optional<Conversation> existingConversation = findExistingPrivateConversation(
+                firstUser.getId(),
+                secondUser.getId());
+
+        if (existingConversation.isPresent()) {
+            return existingConversation.get();
+        }
+
+        Conversation conversation = Conversation.builder()
+                .type(ConversationType.PRIVATE)
+                .createdBy(createdBy)
+                .build();
+
+        conversationRepository.save(Objects.requireNonNull(conversation));
+
+        addMemberToConversation(conversation, firstUser);
+        addMemberToConversation(conversation, secondUser);
+
+        return findConversationById(conversation.getId());
+    }
+
     private void addMemberToConversation(Conversation conversation, User user) {
         ConversationMember member = ConversationMember.builder()
                 .conversation(conversation)
