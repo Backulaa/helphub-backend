@@ -20,5 +20,10 @@ public interface VolunteerAssignmentRepository extends JpaRepository<VolunteerAs
     List<VolunteerAssignment> findAllBySupportRequestAndStatusOrderByAssignedAtDesc(SupportRequest supportRequest,
             VolunteerAssignmentStatus status);
 
+    boolean existsBySupportRequestAndVolunteerAndStatus(
+            SupportRequest supportRequest,
+            User volunteer,
+            VolunteerAssignmentStatus status);
+
     long countBySupportRequestAndStatus(SupportRequest supportRequest, VolunteerAssignmentStatus status);
 }
