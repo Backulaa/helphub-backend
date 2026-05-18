@@ -18,6 +18,8 @@ import org.springframework.data.repository.query.Param;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailIgnoreCaseAndIsActiveTrue(String email);
+
     boolean existsByEmail(String email);
 
     Optional<User> findByIdAndIsActiveTrue(UUID id);

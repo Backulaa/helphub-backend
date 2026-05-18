@@ -3,6 +3,7 @@ package com.helphub.backend.modules.conversation;
 import com.helphub.backend.common.payload.ApiResponse;
 import com.helphub.backend.modules.conversation.dto.request.AddConversationMemberRequest;
 import com.helphub.backend.modules.conversation.dto.request.CreateGroupConversationRequest;
+import com.helphub.backend.modules.conversation.dto.request.CreatePrivateConversationByEmailRequest;
 import com.helphub.backend.modules.conversation.dto.request.CreatePrivateConversationRequest;
 import com.helphub.backend.modules.conversation.dto.response.ConversationDetailResponse;
 import com.helphub.backend.modules.conversation.dto.response.ConversationSummaryResponse;
@@ -30,6 +31,20 @@ public class ConversationController {
             @Valid @RequestBody CreatePrivateConversationRequest request) {
 
         ConversationDetailResponse response = conversationService.createPrivateConversation(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<ConversationDetailResponse>builder()
+                        .success(true)
+                        .message("Private conversation created successfully")
+                        .data(response)
+                        .build());
+    }
+
+    @PostMapping("/private/by-email")
+    public ResponseEntity<ApiResponse<ConversationDetailResponse>> createPrivateConversationByEmail(
+            @Valid @RequestBody CreatePrivateConversationByEmailRequest request) {
+
+        ConversationDetailResponse response = conversationService.createPrivateConversationByEmail(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<ConversationDetailResponse>builder()

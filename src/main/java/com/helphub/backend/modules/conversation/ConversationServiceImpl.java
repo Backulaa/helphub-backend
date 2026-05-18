@@ -6,6 +6,7 @@ import com.helphub.backend.common.exception.ForbiddenException;
 import com.helphub.backend.common.exception.ResourceNotFoundException;
 import com.helphub.backend.modules.conversation.dto.request.AddConversationMemberRequest;
 import com.helphub.backend.modules.conversation.dto.request.CreateGroupConversationRequest;
+import com.helphub.backend.modules.conversation.dto.request.CreatePrivateConversationByEmailRequest;
 import com.helphub.backend.modules.conversation.dto.request.CreatePrivateConversationRequest;
 import com.helphub.backend.modules.conversation.dto.response.ConversationDetailResponse;
 import com.helphub.backend.modules.conversation.dto.response.ConversationSummaryResponse;
@@ -43,6 +44,19 @@ public class ConversationServiceImpl implements ConversationService {
         User currentUser = getCurrentUser();
         User receiver = findActiveUserById(request.getReceiverId());
 
+        return createPrivateConversation(currentUser, receiver);
+    }
+
+    @Override
+    @Transactional
+    public ConversationDetailResponse createPrivateConversationByEmail(CreatePrivateConversationByEmailRequest request) {
+        User currentUser = getCurrentUser();
+        User receiver = findActiveUserByEmail(request.getReceiverEmail());
+
+        return createPrivateConversation(currentUser, receiver);
+    }
+
+    private ConversationDetailResponse createPrivateConversation(User currentUser, User receiver) {
         if (currentUser.getId().equals(receiver.getId())) {
             throw new BadRequestException("Cannot create private conversation with yourself");
         }
@@ -296,6 +310,14 @@ public class ConversationServiceImpl implements ConversationService {
         return userRepository.findByIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with id: " + userId));
+    }
+
+    private User findActiveUserByEmail(String email) {
+        String normalizedEmail = Objects.requireNonNull(email).trim();
+
+        return userRepository.findByEmailIgnoreCaseAndIsActiveTrue(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with email: " + normalizedEmail));
     }
 
     private void validateMember(UUID conversationId, UUID userId) {

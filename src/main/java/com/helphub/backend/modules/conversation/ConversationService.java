@@ -2,6 +2,7 @@ package com.helphub.backend.modules.conversation;
 
 import com.helphub.backend.modules.conversation.dto.request.AddConversationMemberRequest;
 import com.helphub.backend.modules.conversation.dto.request.CreateGroupConversationRequest;
+import com.helphub.backend.modules.conversation.dto.request.CreatePrivateConversationByEmailRequest;
 import com.helphub.backend.modules.conversation.dto.request.CreatePrivateConversationRequest;
 import com.helphub.backend.modules.conversation.dto.response.ConversationDetailResponse;
 import com.helphub.backend.modules.conversation.dto.response.ConversationSummaryResponse;
@@ -13,6 +14,8 @@ import java.util.UUID;
 public interface ConversationService {
 
     ConversationDetailResponse createPrivateConversation(CreatePrivateConversationRequest request);
+
+    ConversationDetailResponse createPrivateConversationByEmail(CreatePrivateConversationByEmailRequest request);
 
     ConversationDetailResponse createGroupConversation(CreateGroupConversationRequest request);
 
