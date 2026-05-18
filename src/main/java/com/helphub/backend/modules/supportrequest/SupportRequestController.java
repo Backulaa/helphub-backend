@@ -30,7 +30,7 @@ public class SupportRequestController {
 
         private final SupportRequestService supportRequestService;
 
-        @PreAuthorize("hasRole('REQUESTER')")
+        @PreAuthorize("hasRole('REQUESTER') or hasRole('COLLABORATOR')")
         @PostMapping
         public ResponseEntity<ApiResponse<SupportRequestDetailResponse>> createSupportRequest(
                         @AuthenticationPrincipal CustomUserDetails currentUser,
@@ -60,7 +60,7 @@ public class SupportRequestController {
                                 .build());
         }
 
-        @PreAuthorize("hasRole('REQUESTER')")
+        @PreAuthorize("hasRole('REQUESTER') or hasRole('COLLABORATOR')")
         @GetMapping("/my-requests")
         public ResponseEntity<ApiResponse<List<SupportRequestSummaryResponse>>> getMySupportRequests(
                         @AuthenticationPrincipal CustomUserDetails currentUser) {
