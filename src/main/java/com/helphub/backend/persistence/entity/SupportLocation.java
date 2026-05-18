@@ -28,10 +28,6 @@ public class SupportLocation extends AuditableEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
-
     @Column
     private Double latitude;
 
